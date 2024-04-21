@@ -8,7 +8,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { hash, compare } from 'bcryptjs';
 import { Model } from 'mongoose';
 import { SignUpDto } from './dto/sign-up.dto';
-import { User } from './schema/user.schema';
+import { User } from './schemas/user.schema';
 import { SignInDto } from './dto/sign-in.dto';
 
 @Injectable()
@@ -62,11 +62,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    try {
-      const token = this.jwtService.sign({ id: user._id });
-      return { token };
-    } catch (error) {
-      throw new BadRequestException('Unable to sign in');
-    }
+    const token = this.jwtService.sign({ id: user._id });
+    return { token };
   }
 }
