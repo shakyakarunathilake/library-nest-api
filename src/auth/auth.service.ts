@@ -1,3 +1,4 @@
+// auth.service.ts
 import {
   BadRequestException,
   Injectable,
@@ -23,43 +24,33 @@ export class AuthService {
     const { email, name, password } = signUpDto;
 
     const existingUser = await this.userModel.findOne({ email });
-
     if (existingUser) {
       throw new BadRequestException('Email already in use.');
     }
 
     const hashedPassword = await hash(password, 10);
-
     const newUser = new this.userModel({
       name,
       email,
       password: hashedPassword,
     });
 
-    try {
-      const savedUser = await newUser.save();
-
-      const token = this.jwtService.sign({ id: savedUser._id });
-
-      return { token };
-    } catch (error) {
-      throw new BadRequestException('Unable to create user.');
-    }
+    await newUser.save();
+    const token = this.jwtService.sign({ id: newUser._id });
+    return { token };
   }
 
   async signIn(signInDto: SignInDto): Promise<{ token: string }> {
     const { email, password } = signInDto;
 
     const user = await this.userModel.findOne({ email });
-
     if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('Invalid email or password.');
     }
 
     const isPasswordMatched = await compare(password, user.password);
-
     if (!isPasswordMatched) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('Invalid email or password.');
     }
 
     const token = this.jwtService.sign({ id: user._id });
