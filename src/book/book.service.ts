@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { FilterQuery, Model, isValidObjectId } from 'mongoose';
 import { Book } from './schemas/book.schema';
-import { Model } from 'mongoose';
 
 @Injectable()
 export class BookService {
@@ -10,8 +14,22 @@ export class BookService {
     private bookModel: Model<Book>,
   ) {}
 
-  async findAll(): Promise<Book[]> {
-    const books = await this.bookModel.find();
+  async findAll(query: { keyword?: string; page?: string }): Promise<Book[]> {
+    const resPerPage = 2;
+    const currentPage = Number(query.page) || 1;
+    const skip = resPerPage * (currentPage - 1);
+
+    const filter: FilterQuery<Book> = {};
+
+    if (query.keyword) {
+      filter.title = { $regex: query.keyword, $options: 'i' };
+    }
+
+    const books = await this.bookModel
+      .find(filter)
+      .limit(resPerPage)
+      .skip(skip);
+
     return books;
   }
 
@@ -21,6 +39,12 @@ export class BookService {
   }
 
   async findById(id: string): Promise<Book> {
+    const isValidId = isValidObjectId(id);
+
+    if (!isValidId) {
+      throw new BadRequestException('Please enter correct id');
+    }
+
     const book = await this.bookModel.findById(id);
 
     if (!book) {

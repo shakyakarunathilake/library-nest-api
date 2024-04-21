@@ -14,12 +14,8 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signUp({
-    email,
-    name,
-    password,
-  }: SignUpDto): Promise<{ token: string }> {
-    console.log('controller signUpDto: ', { email, name, password });
+  async signUp(signUpDto: SignUpDto): Promise<{ token: string }> {
+    const { email, name, password } = signUpDto;
 
     const hashedPassword = await hash(password, 10);
 
